@@ -81,7 +81,7 @@ def memae_train_data_for_one_epoch(train_data,optimizer, model,loss_function,val
     return train_loss,val_loss,eval_metric
 
 
-def train_memae(model,train_data,optimizer,validation_data=[],evaluation_metric=None,epochs=10,batch_size=16,loss_alpha=0.0002,loss_eps=1e-12,
+def train_memae(model,train_data,optimizer,validation_data=[],evaluation_metric=None,epochs=10,batch_size=16,loss_alpha=0.0002,loss_eps=1e-12,alpha_grad_loss=0.0001,
             record_history = False,history_params= None):
 
     """
@@ -112,7 +112,7 @@ def train_memae(model,train_data,optimizer,validation_data=[],evaluation_metric=
     train_losses,val_losses,eval_metrics = [],[],[]
 
     #? Loss function for the model MemAE
-    loss_function = MemAELoss(loss_alpha,loss_eps)
+    loss_function = MemAELoss(loss_alpha,loss_eps,alpha_grad_loss)
 
 
     #? Record of history
