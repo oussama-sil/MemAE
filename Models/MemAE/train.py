@@ -59,7 +59,7 @@ def memae_train_data_for_one_epoch(train_data,optimizer, model,loss_function,val
     for batch in range(train_data.shape[0]):
         # Perform backward on one batch 
         loss_value = memae_apply_gradient(optimizer, model,loss_function, train_data[batch,:,:,:,:,:]) 
-        print(f"Btach {batch}/{train_data.shape[0]}  loss= {loss_value}")
+        print(f"Btach {batch+1}/{train_data.shape[0]}  loss= {loss_value}")
         #Append loss for the current batch 
         losses.append(loss_value)
 
@@ -169,7 +169,7 @@ def train_memae(model,train_data,optimizer,validation_data=[],evaluation_metric=
             
             #? Saving the epoch results 
             with open(os.path.join(history_params["dir"], "summary.txt"), "a") as file:
-                file.write(f"Trainning loss after {epoch+1} epoch  = { train_loss } , on validation data {val_loss}, Eval metric {eval_metric}\n")
+                file.write(f"Epoch {epoch+1} : time = {round(time.time() - start_time,2)} (s), train loss  = { train_loss } , on validation loqq {val_loss}, Eval metric {eval_metric}\n")
 
             #? Saving the loss and the evaluation metric 
             with open(os.path.join(history_params["dir"], "loss.txt"), "a") as file:
@@ -183,7 +183,12 @@ def train_memae(model,train_data,optimizer,validation_data=[],evaluation_metric=
 
                 with open(os.path.join(history_params["dir"], f"Weights/optimizer_epoch_{epoch+1}.pkl"), "wb") as file:
                     pickle.dump(optimizer.get_config(), file)
-
+                
+                # #? Write the file that contains the parameters of the model and the trainning
+                # with open(os.path.join(history_params["dir"], "Weights/optimizer_epoch_{epoch+1}.json"), "w") as file:
+                #     # Write the dictionary to the file
+                #     json.dump(tf.keras.optimizers.serialize(optimizer), file)
+                
                 print("Optimizer state Saved")
 
     print('\n')
