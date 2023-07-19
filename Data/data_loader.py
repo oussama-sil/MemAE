@@ -9,7 +9,7 @@ from skimage.transform import resize
 np.set_printoptions(threshold=np.inf)  # Display all elements in the console 
 
 # Function to load trainning data from the UCSD dataset 
-# Dataset output size: m * NB_Frame * H * W 
+# Dataset output size: m * NB_Frame * H * W * 1
 def load_data_train(H,W, load_ped2 = True ,load_ped1=False,path_ped2='./UCSDped2',path_ped1='./UCSDped1',train=True):
     """
         Output :dataset stored as dictionary where keys are the name of the videos and the values are arrays containing the list of frames in each video  
@@ -55,7 +55,7 @@ def load_data_train(H,W, load_ped2 = True ,load_ped1=False,path_ped2='./UCSDped2
 # For loading the trainning dataset 
 def prepare_data_train_memae(videos,nb_frames,shuffle=False,m=154,save=False,save_path='./'):
     """
-        Output : dataset as numpay array of shape (m,nb_frames,H,W)
+        Output : dataset as numpay array of shape (m,nb_frames,H,W,1)
     """
     data= []
     # Divide the videos to sequences of length nb_frames
@@ -75,14 +75,14 @@ def prepare_data_train_memae(videos,nb_frames,shuffle=False,m=154,save=False,sav
             data.append(random_video[random_indx:random_indx+nb_frames])
     data = np.array(data)
 
-    # Save the loaded data to ...npy file
+    # Save the loaded data to .npy file
     if save:
         np.save(save_path+'/train_'+str(data.shape)+'.npy', data)
-
+        print(f"Data of shape {data.shape} saved")
 
     return data
 
-def create_train_dataset_memae(H,W,nb_frames,load_ped2 = True ,load_ped1=False,shuffle=False,m=154,save=False,save_path='.',path_ped2='./UCSDped2',path_ped1='./UCSDped1'):
+def create_train_dataset_memae(H,W,nb_frames,load_ped2 = True ,load_ped1=False,shuffle=False,m=154,save=True,save_path='.',path_ped2='./UCSDped2',path_ped1='./UCSDped1'):
     path = save_path+'/train_'+str((m,nb_frames,H,W,1))+'.npy'
     print("\n<<<  Loading trainning dataset >>>")
     print("path : "+path)
@@ -92,7 +92,7 @@ def create_train_dataset_memae(H,W,nb_frames,load_ped2 = True ,load_ped1=False,s
     else:
         print("Preparing and Loading the dataset")
         videos = load_data_train(H,W,load_ped2 = load_ped2 ,load_ped1=load_ped1,path_ped2=path_ped2,path_ped1=path_ped1)
-        data = prepare_data_train_memae(videos,nb_frames,shuffle=shuffle,save=save,save_path=save_path)
+        data = prepare_data_train_memae(videos,nb_frames,shuffle=shuffle,save=save,save_path=save_path,m=m)
     print(f"Data loaded , shape {data.shape}, size {data.nbytes / (1024 * 1024)} MB \n")
     return data
 

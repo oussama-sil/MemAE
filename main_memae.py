@@ -38,30 +38,35 @@ from Utils.plots import plot_loss_evol,plot_metric_evol
 
 # with tf.compat.v1.Session() as sess:
 
-tf.config.threading.set_inter_op_parallelism_threads(6) 
-tf.config.threading.set_intra_op_parallelism_threads(6)
+tf.config.threading.set_inter_op_parallelism_threads(12) 
+tf.config.threading.set_intra_op_parallelism_threads(12)
 tf.config.set_soft_device_placement(False)
 
 
 # ? Loading data 
 #* Dimensions of data 
 #* PED2 are 3:2
-H = 192
-W = 128
+H = 128 # 192 160
+W = 192 # 128  224
 nb_frames = 16
 #* Loading trainning dataset for MemAE model 
-data_train = create_train_dataset_memae(H,W,nb_frames,load_ped2 = True ,load_ped1=False,shuffle=False,m=154,save=True,save_path='./Data/Data_npy',path_ped2='./Data/UCSDped2',path_ped1='./Data/UCSDped1')
+data_train = create_train_dataset_memae(H,W,nb_frames,load_ped2 = True ,load_ped1=False,shuffle=True,m=350,save=True,save_path='./Data/Data_npy',path_ped2='./Data/UCSDped2',path_ped1='./Data/UCSDped1')
 #* Loading the test data 
 data_test,data_test_gt,data_test_labels = create_test_dataset_memae(H,W,nb_frames,load_ped2 = True ,load_ped1=False,save=True,save_path='./Data/Data_npy',path_ped2='./Data/UCSDped2',path_ped1='./Data/UCSDped1')
 
 
 #? Parameters of the model 
-learning_rate = 0.0002 #0.0001 gave good results 
-nb_epochs = 2
+#TODO : try with 0.0025 (same params as paper and github and with other optimizer)
+#TODO : look for other method
+#TODO : implement normality score
+#TODO : implement AUC
+learning_rate = 0.0001 #0.0001/0.0002 gave good results 
+nb_epochs = 120
 mem_dim = 2000
-entropy_loss = 0.02 # 0.002 
-shrink_thresh = 0.0005 #0.0025  0.001 0.0015 0.0005 0.0004
-batch_size = 12
+entropy_loss = 0.0002  # 0.002 goood res , 0.002  / 0.0002
+shrink_thresh = 0.0025 #0.0025  0.001 0.0015 0.0005 0.0004
+batch_size = 14
+alpha_grad_loss = 0 # Grad loss 
 
 #? History params 
 history_params = {
@@ -74,9 +79,10 @@ history_params = {
                 "mem_dim" :mem_dim,
                 "entropy_loss" : entropy_loss, 
                 "shrink_thresh" :shrink_thresh,
-                "batch_size":batch_size
+                "batch_size":batch_size,
+                "alpha_grad_loss":alpha_grad_loss
             },
-            "nb_epochs_checkpoint" : 1,  # Save each nb_epochs_checkpoint epoch 
+            "nb_epochs_checkpoint" : 10,  # Checkpoint (saving weights and optimizer state) each .. epochs 
         }
 
 
@@ -94,8 +100,20 @@ TRAIN = True
 if TRAIN: 
 
     #? Creation of a new optimizer 
-    optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
+    # optimizer = tf.keras.optimizers.SGD(learning_rate=0.01) #! ON colab running 
+    # optimizer = tf.keras.optimizers.SGD(learning_rate=0.01,momentum=0.9) #! Next on colab  
+    optimizer = tf.keras.optimizers.RMSprop(learning_rate=0.01) #! Next 
+    #optimizer = tf.keras.optimizers.Adagrad() #! Next 02 
+    # optimizer = tf.keras.optimizers.Adam(learning_rate=0.005)
+    # optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate) #! Running on 
+    # optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 
+
+    history_params["train_params"]["optimizer_name"] = optimizer.get_config()["name"]
+    # history_params["train_params"]["optimizer_learning_rate"] = optimizer.get_config()["learning_rate"]
+
+    # print(history_params["train_params"])
+    #TODO : Try other optimizer 
     #? Loading an old optimizer 
     # with open("./Trainning_History/MemAE/Weights/optimizer_epoch_2.pkl", "rb") as file:
     #     optimizer_config = pickle.load(file)
@@ -104,12 +122,12 @@ if TRAIN:
     # memae_model.load_weights("./Models/memae_model_weights_(256,256).h5")
 
     train_losses,val_losses,eval_metrics = train_memae(memae_model,data_train,optimizer,
-                    validation_data=data_test[5:7,:,:,:,:],
+                    validation_data=data_test[5:7,:,:,:,:],loss_alpha=entropy_loss,alpha_grad_loss=alpha_grad_loss,
                     evaluation_metric=None,epochs=nb_epochs,batch_size=batch_size,
                     record_history=True,history_params=history_params)
 
     # Saving the weights 
-    memae_model.save_weights("./Models/Models_weights_save/memae_model_weights_({H},{W}).h5")
+    memae_model.save_weights(f"./Models/Models_weights_save/memae_model_weights_({H},{W}).h5")
 
 
     plot_loss_evol(train_losses,val_losses)
@@ -118,13 +136,13 @@ else:
 
 
     #? Loading a model 
-    memae_model.load_weights("./Models/Models_weights_save/memae_model_weights_(256,256).h5")
+    memae_model.load_weights(f"./Models/Models_weights_save/memae_model_weights_({H},{W}).h5")
         
     memae_model.summary()
 
 
 #? Testing the model with images from the trainning dataset or the test_dataset
-in_img = data_test[8:9,:,:,:,:]
+in_img = data_test[14:15,:,:,:,:]
 out_img,_ = memae_model(in_img)
 rec_error = (in_img-out_img)**2 # Computing the reconstruction error 
 anomaly_mask = np.where(rec_error.numpy() > 0.05 , 1, 0)

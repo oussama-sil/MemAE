@@ -1,13 +1,14 @@
 import tensorflow as tf 
 import numpy as np 
 from tensorflow.keras.layers import Layer
-
+import math 
 # Building a simple encoder, decoder architecture model without the memore 
 
+LEAKY_RELU = 0.2 # Leaky relu param
 
 
 class Encoder(tf.keras.Model):
-    def __init__(self, leaky_relu_param = 0):
+    def __init__(self, leaky_relu_param = LEAKY_RELU):
         super(Encoder, self).__init__(name='Encoder')
         
         # Input shape 16 256 256 1 
@@ -52,7 +53,7 @@ class Encoder(tf.keras.Model):
 
 
 class Decoder(tf.keras.Model):
-    def __init__(self, leaky_relu_param = 0):
+    def __init__(self, leaky_relu_param = LEAKY_RELU):
         super(Decoder, self).__init__(name='Decoder')
 
         # Input shape 2 16 16 256 
@@ -246,10 +247,13 @@ class Memory(tf.keras.Model):
         self.epsilon = epsilon
 
         #* Items in the memory 
-        m_init = tf.random_normal_initializer()
+        stdv = 1. / math.sqrt(size_item)
+        m_init = tf.random_uniform_initializer(-stdv,stdv)
+
+
+
         self.m = tf.Variable(name="Memory-Items",
-            initial_value=m_init(shape=(nb_items,size_item),
-            dtype='float32'),
+            initial_value=m_init(shape=(nb_items,size_item),dtype='float32'),
             trainable=True)
 
         #* Layers of the memory 
