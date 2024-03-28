@@ -100,12 +100,12 @@ TRAIN = True
 if TRAIN: 
 
     #? Creation of a new optimizer 
-    # optimizer = tf.keras.optimizers.SGD(learning_rate=0.01) #! ON colab running 
-    # optimizer = tf.keras.optimizers.SGD(learning_rate=0.01,momentum=0.9) #! Next on colab  
-    optimizer = tf.keras.optimizers.RMSprop(learning_rate=0.01) #! Next 
-    #optimizer = tf.keras.optimizers.Adagrad() #! Next 02 
+    # optimizer = tf.keras.optimizers.SGD(learning_rate=0.01) 
+    # optimizer = tf.keras.optimizers.SGD(learning_rate=0.01,momentum=0.9) 
+    optimizer = tf.keras.optimizers.RMSprop(learning_rate=0.01)
+    #optimizer = tf.keras.optimizers.Adagrad() 
     # optimizer = tf.keras.optimizers.Adam(learning_rate=0.005)
-    # optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate) #! Running on 
+    # optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate) 
     # optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
 
 
@@ -144,7 +144,7 @@ else:
 #? Testing the model with images from the trainning dataset or the test_dataset
 in_img = data_test[14:15,:,:,:,:]
 out_img,_ = memae_model(in_img)
-rec_error = (in_img-out_img)**2 # Computing the reconstruction error 
+rec_error = (in_img-out_img)**2 # Compute the reconstruction error 
 anomaly_mask = np.where(rec_error.numpy() > 0.05 , 1, 0)
 
 # plot_two_images(in_img[0,2,:,:,0],rec_error[0,2,:,:,0])
